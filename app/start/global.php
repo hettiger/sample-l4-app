@@ -53,6 +53,16 @@ App::error(function(Exception $exception, $code)
 	Log::error($exception);
 });
 
+App::error(function(FormValidationException $exception, $code)
+{
+	// Code Ception seems to be ignoring this.
+
+	return Redirect::back()
+		->withInput()
+		->withErrors($exception->getErrors())
+		->with('message', 'There were validation errors.');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Maintenance Mode Handler

@@ -1,5 +1,41 @@
 <?php
 
+/**
+ * Class FormValidationException
+ *
+ * This is simplified for you to make things easier.
+ * In a real application you could be using something like this: https://github.com/laracasts/validation
+ */
+class FormValidationException extends Exception {
+
+	/**
+	 * @var mixed
+	 */
+	protected $errors;
+
+	/**
+	 * @param string $message
+	 * @param mixed  $errors
+	 */
+	function __construct($message, $errors)
+	{
+		$this->errors = $errors;
+
+		parent::__construct($message);
+	}
+
+	/**
+	 * Get form validation errors
+	 *
+	 * @return mixed
+	 */
+	public function getErrors()
+	{
+		return $this->errors;
+	}
+
+}
+
 class PostsController extends BaseController {
 
     /**
@@ -36,27 +72,52 @@ class PostsController extends BaseController {
         return View::make('posts.create');
     }
 
+	/**
+	 * This is simplified for you to make things easier.
+	 * In a real application you could be using something like this: https://github.com/laracasts/validation
+	 *
+	 * @param $formData
+	 * @return bool
+	 * @throws FormValidationException
+	 */
+	protected function validate($formData)
+	{
+		$validation = Validator::make($formData, Post::$rules);
+
+		if ($validation->fails())
+		{
+			throw new FormValidationException('Validation failed', $validation->getMessageBag());
+		}
+
+		return true;
+	}
+
     /**
      * Store a newly created resource in storage.
-     *
+	 *
      * @return Response
      */
     public function store()
     {
         $input = Input::only('title','body');
-        $validation = Validator::make($input, Post::$rules);
 
-        if ($validation->passes())
-        {
-            $this->post->create($input);
+		// Uncomment the try + catch blocks to make the ReproduceCept pass.
 
-            return Redirect::route('posts.index');
-        }
+//		try
+//		{
+			$this->validate($input);
+//		}
+//		catch (FormValidationException $exception)
+//		{
+//			return Redirect::back()
+//				->withInput()
+//				->withErrors($exception->getErrors())
+//				->with('message', 'There were validation errors.');
+//		}
 
-        return Redirect::route('posts.create')
-            ->withInput()
-            ->withErrors($validation)
-            ->with('message', 'There were validation errors.');
+		$this->post->create($input);
+
+		return Redirect::route('posts.index');
     }
 
     /**
